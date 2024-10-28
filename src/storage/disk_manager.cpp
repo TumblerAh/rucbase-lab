@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #include <unistd.h>    // for lseek
 
 #include "defs.h"
+#define page_size 4096
 
 DiskManager::DiskManager() { memset(fd2pageno_, 0, MAX_FD * (sizeof(std::atomic<page_id_t>) / sizeof(char))); }
 
@@ -31,7 +32,17 @@ void DiskManager::write_page(int fd, page_id_t page_no, const char *offset, int 
     // 1.lseek()定位到文件头，通过(fd,page_no)可以定位指定页面及其在磁盘文件中的偏移量
     // 2.调用write()函数
     // 注意write返回值与num_bytes不等时 throw InternalError("DiskManager::write_page Error");
-
+    off_t  offset_in_file = page_no * page_size;
+    if(lseek(fd,offset_in_file,SEEK_SET)==-1){
+         throw std::runtime_error("DiskManager::write_page lseek Error");
+    }
+    ssize_t bytes_write = write(fd,offset,num_bytes);
+    if(bytes_write == -1){
+         throw std::runtime_error("DiskManager::write_page lseek Error");
+    }
+    if(bytes_write!=num_bytes){
+         throw std::runtime_error("DiskManager::write_page lseek Error");
+    }
 }
 
 /**
@@ -46,7 +57,17 @@ void DiskManager::read_page(int fd, page_id_t page_no, char *offset, int num_byt
     // 1.lseek()定位到文件头，通过(fd,page_no)可以定位指定页面及其在磁盘文件中的偏移量
     // 2.调用read()函数
     // 注意read返回值与num_bytes不等时，throw InternalError("DiskManager::read_page Error");
-
+    off_t offset_in_file = page_no * page_size;
+    if(lseek(fd,offset_in_file,SEEK_SET) == -1){
+         throw std::runtime_error("DiskManager::read_page lseek Error");
+    }
+    ssize_t bytes_read = read(fd,offset,num_bytes);
+    if(ssize_t == -1){
+        throw std::runtime_error("DiskManager::read_page lseek Error");
+    }
+    if(ssize_t != num_bytes){
+        throw std::runtime_error("DiskManager::read_page lseek Error");
+    }
 }
 
 /**
