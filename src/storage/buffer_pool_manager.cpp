@@ -45,7 +45,7 @@ void BufferPoolManager::update_page(Page *page, PageId new_page_id, frame_id_t n
     if(page->is_dirty()){
         page->is_dirty_ = false;
         disk_manager_->write_page(page->get_page_id().fd,page->get_page_id().page_no,page->get_data(),PAGE_SIZE);
-        
+    
     }
 
     page_table_.erase(page->get_page_id());
@@ -83,9 +83,8 @@ Page* BufferPoolManager::fetch_page(PageId page_id) {
     frame_id_t frame_id = -1;
     if(find_victim_page(&frame_id)){
         Page*page = &pages_[frame_id];
-        if(page->is_dirty()){
-            update_page(page,page_id,frame_id);
-        }
+        
+        update_page(page,page_id,frame_id);
         disk_manager_->read_page(page_id.fd,page_id.page_no,page->data_,PAGE_SIZE);
         page->pin_count_++;
         replacer_->pin(frame_id);
